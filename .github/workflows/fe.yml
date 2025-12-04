@@ -1,34 +1,32 @@
-name: Deploy ASP.NET Core MVC to Somee
+name: Deploy HTML to Somee via FTP
 
 on:
   push:
     branches:
-      - main  # Hoặc "master" nếu nhánh chính của bạn tên là master
+      - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Lấy code từ kho chứa về
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-    # 2. Cài đặt môi trường .NET 8 (Khớp với máy bạn)
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+      - name: Deploy to Somee Hosting
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.HOST }}       # biến HOST
+          username: ${{ secrets.USERNAME }} # biến USERNAME
+          password: ${{ secrets.PW }}       # biến PW
 
-    # 3. Build và Publish code ra thư mục ./publish_output
-    - name: Publish .NET App
-      run: dotnet publish -c Release -o ./publish_output
+          protocol: ftp
+          local-dir: ./
+          server-dir: /wwwroot/             # thư mục mặc định của Somee
 
-    # 4. Cài đặt công cụ FTP (lftp)
-    - name: Install lftp
-      run: sudo apt-get update && sudo apt-get install -y lftp
-
-    # 5. Đẩy file lên Server Somee
-    - name: Deploy via FTP
-      run: |
-        lftp -e "set ftp:ssl-allow no; open -u ${{ secrets.USER }},${{ secrets.PW }} ${{ secrets.HOST }}; mirror -R ./publish_output /www.MINHVY.somee.com; bye"
+          exclude: |
+            **/.git*
+            **/.github*
+            **/node_modules*
+            README.md
+            LICENSE
