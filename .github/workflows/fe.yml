@@ -16,13 +16,13 @@ jobs:
       - name: Deploy to Somee Hosting
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          server: ${{ secrets.HOST }}       # biến HOST
-          username: ${{ secrets.USERNAME }} # biến USERNAME
-          password: ${{ secrets.PW }}       # biến PW
+          server: ${{ secrets.HOST }}   # biến HOST
+          username: ${{ secrets.USER }} # biến USER
+          password: ${{ secrets.PW }}   # biến PW
 
           protocol: ftp
           local-dir: ./
-          server-dir: /wwwroot/             # thư mục mặc định của Somee
+          server-dir: /wwwroot/         # thư mục gốc trên Somee
 
           exclude: |
             **/.git*
