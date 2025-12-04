@@ -2,37 +2,34 @@ name: Deploy ASP.NET MVC to Somee
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '8.0.x'
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '7.0.x'
 
-      - name: Restore
-        run: dotnet restore PROMVCAPI/proMvcApi.csproj
+    # PUBLISH
+    - name: Publish .NET App
+      run: dotnet publish ./PROMVCAPI/proMvcApi.csproj -c Release -o ./publish_output
 
-      - name: Build
-        run: dotnet build PROMVCAPI/proMvcApi.csproj --configuration Release --no-restore
+    # INSTALL LFTP
+    - name: Install lftp
+      run: sudo apt-get update && sudo apt-get install -y lftp
 
-      - name: Publish
-        run: dotnet publish PROMVCAPI/proMvcApi.csproj -c Release -o publish
-
-      - name: FTP Deploy to Somee
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: publish
-          server-dir: /
-          protocol: ftp
+    # DEPLOY
+    - name: Upload via FTP
+      run: |
+        lftp -e "
+        set ssl:verify-certificate no;
+        mirror -R ./publish_output/ /www.MINHVY.somee.com/;
+        bye
+        " -u "vy3803","${{ secrets.FTP_PASSWORD }}" "ftp://MINHVY.somee.com"
