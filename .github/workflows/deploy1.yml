@@ -1,0 +1,52 @@
+name: Deploy ASP.NET to Somee
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1 – Lấy mã nguồn
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2 – Cài SDK .NET
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'   # đổi theo version của bạn
+
+      # 3 – Restore package
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # 4 – Build
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      # 5 – Publish output vào thư mục publish/
+      - name: Publish
+        run: dotnet publish -c Release -o publish
+
+      # 6 – Deploy lên Somee qua FTP
+      - name: FTP Deploy to Somee
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+
+          protocol: ftp
+          port: 21
+
+          # Chỉ upload thư mục publish
+          local-dir: ./publish
+          server-dir: /   # tùy hosting Somee yêu cầu
+
+          exclude: |
+            **/*.pdb
+            **/*.xml
