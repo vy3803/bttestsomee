@@ -1,4 +1,4 @@
-name: Deploy ASP.NET to Somee
+name: Deploy ASP.NET MVC to Somee
 
 on:
   push:
@@ -16,16 +16,16 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'   # sửa theo version dự án
+          dotnet-version: '8.0.x'   # sửa nếu bạn dùng 7.0 hoặc 6.0
 
       - name: Restore
-        run: dotnet restore ./proMvcApi/proMvcApi.csproj
+        run: dotnet restore ./PROMVCAPI/proMvcApi.csproj
 
       - name: Build
-        run: dotnet build ./proMvcApi/proMvcApi.csproj --configuration Release --no-restore
+        run: dotnet build ./PROMVCAPI/proMvcApi.csproj --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish ./proMvcApi/proMvcApi.csproj -c Release -o ./publish
+        run: dotnet publish ./PROMVCAPI/proMvcApi.csproj -c Release -o ./publish
 
       - name: FTP Deploy to Somee
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
