@@ -1,4 +1,4 @@
-name: Deploy HTML to Somee via FTP
+name: Deploy .NET Core to Somee
 
 on:
   push:
@@ -6,27 +6,29 @@ on:
       - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+    # 1. Lấy code về
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Deploy to Somee Hosting
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          password: ${{ secrets.PW }}
+    # 2. Cài đặt .NET 8
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
 
-          protocol: ftp
-          local-dir: ./
-          server-dir: /www.MINHVY.somee.com/   # !!! CHÍNH XÁC 100%
+    # 3. Build code (Đã trỏ đúng thư mục proMvcApi)
+    - name: Publish .NET App
+      run: dotnet publish ./proMvcApi -c Release -o ./publish_output
 
-          exclude: |
-            **/.git*
-            **/.github*
-            **/node_modules*
-            README.md
-            LICENSE
+    # 4. Cài đặt FTP
+    - name: Install lftp
+      run: sudo apt-get update && sudo apt-get install -y lftp
+
+    # 5. Đẩy lên Server (Sử dụng Secrets)
+    - name: Deploy via FTP
+      run: |
+        lftp -e "set ftp:ssl-allow no; open -u ${{ secrets.USER }},${{ secrets.PW }} ${{ secrets.HOST }}; mirror -R ./publish_output /www.MINHVY.somee.com; bye"
