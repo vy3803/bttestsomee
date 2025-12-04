@@ -10,43 +10,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1 – Lấy mã nguồn
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2 – Cài SDK .NET
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'   # đổi theo version của bạn
+          dotnet-version: '8.0.x'   # sửa theo version dự án
 
-      # 3 – Restore package
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Restore
+        run: dotnet restore ./proMvcApi/proMvcApi.csproj
 
-      # 4 – Build
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build ./proMvcApi/proMvcApi.csproj --configuration Release --no-restore
 
-      # 5 – Publish output vào thư mục publish/
       - name: Publish
-        run: dotnet publish -c Release -o publish
+        run: dotnet publish ./proMvcApi/proMvcApi.csproj -c Release -o ./publish
 
-      # 6 – Deploy lên Somee qua FTP
       - name: FTP Deploy to Somee
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-
-          protocol: ftp
-          port: 21
-
-          # Chỉ upload thư mục publish
           local-dir: ./publish
-          server-dir: /   # tùy hosting Somee yêu cầu
-
-          exclude: |
-            **/*.pdb
-            **/*.xml
+          server-dir: /
+          protocol: ftp
